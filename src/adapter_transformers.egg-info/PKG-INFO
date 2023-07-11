@@ -1,0 +1,160 @@
+Metadata-Version: 2.1
+Name: adapter-transformers
+Version: 3.1.0
+Summary: A friendly fork of HuggingFace's Transformers, adding Adapters to PyTorch language models
+Home-page: https://github.com/adapter-hub/adapter-transformers
+Author: Jonas Pfeiffer, Andreas Rücklé, Clifton Poth, Hannah Sterz, based on work by the HuggingFace team and community
+Author-email: pfeiffer@ukp.tu-darmstadt.de
+License: Apache
+Keywords: NLP deep learning transformer pytorch BERT adapters
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Requires-Python: >=3.7.0
+Description-Content-Type: text/markdown
+Provides-Extra: ja
+Provides-Extra: sklearn
+Provides-Extra: tf
+Provides-Extra: tf-cpu
+Provides-Extra: torch
+Provides-Extra: accelerate
+Provides-Extra: retrieval
+Provides-Extra: flax
+Provides-Extra: tokenizers
+Provides-Extra: ftfy
+Provides-Extra: onnxruntime
+Provides-Extra: onnx
+Provides-Extra: modelcreation
+Provides-Extra: sagemaker
+Provides-Extra: deepspeed
+Provides-Extra: fairscale
+Provides-Extra: optuna
+Provides-Extra: ray
+Provides-Extra: sigopt
+Provides-Extra: integrations
+Provides-Extra: serving
+Provides-Extra: audio
+Provides-Extra: speech
+Provides-Extra: torch-speech
+Provides-Extra: tf-speech
+Provides-Extra: flax-speech
+Provides-Extra: vision
+Provides-Extra: timm
+Provides-Extra: codecarbon
+Provides-Extra: sentencepiece
+Provides-Extra: testing
+Provides-Extra: deepspeed-testing
+Provides-Extra: quality
+Provides-Extra: all
+Provides-Extra: docs_specific
+Provides-Extra: docs
+Provides-Extra: dev-torch
+Provides-Extra: dev-tensorflow
+Provides-Extra: dev
+Provides-Extra: torchhub
+License-File: LICENSE
+
+# Composing Parameter-Efficient Modules with Arithmetic Operations
+
+This is the official implementation of [this paper](https://arxiv.org/abs/2306.14870), reproducing training-free composition of parameter-efficient modules (PEMs) with addition, negation and multicombination. The implementation of PEMs are based on [adapter-transformers](https://github.com/adapter-hub/adapter-transformers).
+
+In parameter-efficient finetuning (PEFT), a lightweight module is learned on specific dataset while the underlying pretrained model remains unchanged, resulting in multiple compact modules representing diverse skills when applied to various domains and tasks. In this paper, we propose to compose these parameter-efficient modules through **linear arithmetic operations** in the weight space, thereby integrating different module capabilities. Specifically, we first define addition and negation operators for the module, and then further compose these two basic operators to perform flexible arithmetic. Our approach requires **no additional training** and enables highly flexible module composition.  We apply different arithmetic operations to compose the parameter-efficient modules for (1) distribution generalization, (2) multi-tasking, (3) unlearning, and (4) domain transfer. Additionally, we extend our approach to detoxify Alpaca-LoRA, the latest instruction-tuned large language model based on LLaMA. 
+
+![main_image](imgs/main.png)
+
+## Todos
+- [ ] Release Alpaca-LoRA composition exps code
+- [ ] Release 'instruction and toxic output' instruction tuning dataset
+- [ ] Release test instruction sets with toxic ones and non-toxic ones
+
+## Installation
+
+`adapter-transformers` currently supports **Python 3.7+** and **PyTorch 1.3.1+**.
+After downloading and unzipping, you can install by:
+
+```
+cd PEM_composition
+pip install .
+```
+
+## Usage
+
+You can use the tuning and merging shell scripts included in `exps` folder to train parameter-efficient modules and merge them. Here's an example to conduct *composition for distribution generalization* experiment:
+
+Firstly, run `exps/composition_for_distribution_generalization/split_data.sh` to devide dataset into two subsets with different distribution. You can change the name or path of dataset and the storage path of the subset in this script.
+
+```
+bash exps/composition_for_distribution_generalization/split_data.sh
+```
+
+Secondly, run `fft_run_glue.sh`, `lora_run_glue.sh` or `ia3_run_glue.sh` under`exps/composition_for_distribution_generalization/` to train the model. Here we take LoRA training as an example. You can change the storage path of the subset in this script. As we require two modules trained on different distribution, this process should be conducted twice with each one of the two subsets.
+
+```
+bash exps/composition_for_distribution_generalization/lora_run_glue.sh
+```
+
+Lastly, run `dataset_split_merge.sh` under the same parent path to merge the two trained PEMs and evaluate them. Dataset name or path and storage path of PEMs should be set in this script. 
+
+```
+bash exps/composition_for_distribution_generalization/dataset_split_merge.sh
+```
+
+Tuning and merging shell scripts of experiments included in this paper are listed in `exps`: composition for distribution generalization, composition for multitasking, compostion for unlearning and composition for domain transfer. Composition operation are realised in `merge.py`, `analogy.py` and `negation.py`(applied in `exps\composition_for_unlearning\gpt2_scale.py`).
+
+```
+.
+└── exps
+    ├── composition_for_distribution_generalization
+    │   ├── dataset_split_merge.sh
+    │   ├── fft_run_glue.sh
+    │   ├── ftdataset_split_merge.sh
+    │   ├── ia3_run_glue.sh
+    │   ├── lora_run_glue.sh
+    │   └── split_data.sh
+    ├── composition_for_domain_transfer
+    │   ├── fft_polarity_classify.sh
+    │   ├── fft_polarity_lm.sh
+    │   ├── ia3_polarity_classify.sh
+    │   ├── ia3_polarity_lm.sh
+    │   ├── lora_polarity_classify.sh
+    │   ├── lora_polarity_lm.sh
+    │   └── vary_merge_analogy.sh
+    ├── composition_for_multitasking
+    │   ├── fft_prompt_run_glue.sh
+    │   ├── ia3_prompt_run_glue.sh
+    │   ├── lora_prompt_run_glue.sh
+    │   └── vary_merge_prompt_run_glue.sh
+    ├── composition_for_unlearning
+    │   ├── composition_for_unlearning\fft.sh
+    │   ├── gpt2_scale.py
+    │   ├── README.md
+    │   ├── requirements.txt
+    │   ├── run_clm_noconcat.py
+    │   ├── run_prediction.py
+    │   ├── runscore.sh
+    │   └── trainadapter.sh
+    └── run_glue.sh
+```
+
+
+## Instruction Datasets
+The instruction pair with toxic civil comment dataset we created via ChatGPT is in `openai_generate_datasets`, together with toxic and non-toxic instructions for evaluation.
+
+## Citation
+Please cite our paper if you use the data or code in this repo.
+```
+@article{zhang2023composing,
+title={Composing Parameter-Efficient Modules with Arithmetic Operations}, 
+author={Zhang, Jinghan and Chen, Shiqi and Liu, Junteng and He, Junxian},
+journal={arXiv preprint arXiv:2306.14870},
+year={2023}
+}
+```

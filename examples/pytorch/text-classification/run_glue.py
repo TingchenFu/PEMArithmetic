@@ -283,88 +283,92 @@ def main():
     #
     # In distributed training, the load_dataset function guarantee that only one local process can concurrently
     # download the dataset.
-    if data_args.task_name is not None:
-        # Downloading and loading a dataset from the hub.
-        raw_datasets = load_dataset(
-            "glue",
-            data_args.task_name,
-            cache_dir=model_args.cache_dir,
-            use_auth_token=True if model_args.use_auth_token else None,
-        )
-    elif data_args.dataset_name is not None:
-        # Downloading and loading a dataset from the hub.
-        raw_datasets = load_dataset(
-            data_args.dataset_name,
-            data_args.dataset_config_name,
-            cache_dir=model_args.cache_dir,
-            use_auth_token=True if model_args.use_auth_token else None,
-        )
-    else:
+    # if data_args.task_name is not None:
+    #     # Downloading and loading a dataset from the hub.
+    #     raw_datasets = load_dataset(
+    #         "glue",
+    #         data_args.task_name,
+    #         cache_dir=model_args.cache_dir,
+    #         use_auth_token=True if model_args.use_auth_token else None,
+    #     )
+    # print('here is ok1')
+    # print(raw_datasets['train'].features['label'])
+    # elif data_args.dataset_name is not None:
+    #     # Downloading and loading a dataset from the hub.
+    #     raw_datasets = load_dataset(
+    #         data_args.dataset_name,
+    #         data_args.dataset_config_name,
+    #         cache_dir=model_args.cache_dir,
+    #         use_auth_token=True if model_args.use_auth_token else None,
+    #     )
+    # else:
         # Loading a dataset from your local files.
         # CSV/JSON training and evaluation files are needed.
-        data_files = {"train": data_args.train_file, "validation": data_args.validation_file}
+    data_files = {"train": data_args.train_file, "validation": data_args.validation_file}
 
         # Get the test dataset: you can provide your own CSV/JSON test file (see below)
         # when you use `do_predict` without specifying a GLUE benchmark task.
-        if training_args.do_predict:
-            if data_args.test_file is not None:
-                train_extension = data_args.train_file.split(".")[-1]
-                test_extension = data_args.test_file.split(".")[-1]
-                assert (
-                    test_extension == train_extension
-                ), "`test_file` should have the same extension (csv or json) as `train_file`."
-                data_files["test"] = data_args.test_file
-            else:
-                raise ValueError("Need either a GLUE task or a test file for `do_predict`.")
-
-        for key in data_files.keys():
-            logger.info(f"load a local file for {key}: {data_files[key]}")
-
-        if data_args.train_file.endswith(".csv"):
-            # Loading a dataset from local csv files
-            raw_datasets = load_dataset(
-                "csv",
-                data_files=data_files,
-                cache_dir=model_args.cache_dir,
-                use_auth_token=True if model_args.use_auth_token else None,
-            )
+    if training_args.do_predict:
+        if data_args.test_file is not None:
+            train_extension = data_args.train_file.split(".")[-1]
+            test_extension = data_args.test_file.split(".")[-1]
+            assert (
+                test_extension == train_extension
+            ), "`test_file` should have the same extension (csv or json) as `train_file`."
+            data_files["test"] = data_args.test_file
         else:
-            # Loading a dataset from local json files
-            raw_datasets = load_dataset(
-                "json",
-                data_files=data_files,
-                cache_dir=model_args.cache_dir,
-                use_auth_token=True if model_args.use_auth_token else None,
-            )
+            raise ValueError("Need either a GLUE task or a test file for `do_predict`.")
+
+        # for key in data_files.keys():
+        #     logger.info(f"load a local file for {key}: {data_files[key]}")
+
+        # if data_args.train_file.endswith(".csv"):
+        #     # Loading a dataset from local csv files
+        #     raw_datasets = load_dataset(
+        #         "csv",
+        #         data_files=data_files,
+        #         cache_dir=model_args.cache_dir,
+        #         use_auth_token=True if model_args.use_auth_token else None,
+        #     )
+        # else:
+        #     # Loading a dataset from local json files
+    raw_datasets = load_dataset(
+        "json",
+        data_files=data_files,
+        cache_dir=model_args.cache_dir,
+        use_auth_token=True if model_args.use_auth_token else None,
+    )
     # See more about loading any type of standard or custom dataset at
     # https://huggingface.co/docs/datasets/loading_datasets.html.
-    '''train_dataset=raw_datasets["train"]
-    eval_dataset=raw_datasets["validation_matched"]
-    test_dataset=raw_datasets["test_matched"]
-    train_dataset.to_json("split-train-set/"+data_args.task_name+"-train.json")     
-    eval_dataset.to_json("split-train-set/"+data_args.task_name+"-eval.json") 
-    test_dataset.to_json("split-train-set/"+data_args.task_name+"-test.json") 
-    breakpoint()'''
+    # '''train_dataset=raw_datasets["train"]
+    # eval_dataset=raw_datasets["validation_matched"]
+    # test_dataset=raw_datasets["test_matched"]
+    # train_dataset.to_json("split-train-set/"+data_args.task_name+"-train.json")     
+    # eval_dataset.to_json("split-train-set/"+data_args.task_name+"-eval.json") 
+    # test_dataset.to_json("split-train-set/"+data_args.task_name+"-test.json") 
+    # breakpoint()'''
 
     # Labels
-    if data_args.task_name is not None:
-        is_regression = data_args.task_name == "stsb"
-        if not is_regression:
-            label_list = raw_datasets["train"].features["label"].names
-            num_labels = len(label_list)
-        else:
-            num_labels = 1
+    
+    # if data_args.task_name is not None:
+    #     is_regression = data_args.task_name == "stsb"
+    #     if not is_regression:
+    #         label_list = raw_datasets["train"].features["label"].names
+    #         num_labels = len(label_list)
+    #     else:
+    #         num_labels = 1
+    # else:
+    # Trying to have good defaults here, don't hesitate to tweak to your needs.
+    is_regression = raw_datasets["train"].features["label"].dtype in ["float32", "float64"]
+    if is_regression:
+        num_labels = 1
     else:
-        # Trying to have good defaults here, don't hesitate to tweak to your needs.
-        is_regression = raw_datasets["train"].features["label"].dtype in ["float32", "float64"]
-        if is_regression:
-            num_labels = 1
-        else:
-            # A useful fast method:
-            # https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.unique
-            label_list = raw_datasets["train"].unique("label")
-            label_list.sort()  # Let's sort it for determinism
-            num_labels = len(label_list)
+        # A useful fast method:
+        # https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.unique
+        label_list = raw_datasets["train"].unique("label")
+        label_list=[str(x) for x in label_list]
+        label_list.sort()  # Let's sort it for determinism
+        num_labels = len(label_list)
 
     #TODO:看起来这里没有能帮助stsb的东西，需要写一个is_regression之后的转换操作
 
@@ -542,38 +546,6 @@ def main():
             desc="Running tokenizer on dataset",
         )
 
-    # breakpoint()
-    # split_train_set=True
-    # if split_train_set:
-    #     train_dataset = raw_datasets["train"]
-    #     train_data_0=train_dataset.filter(lambda trdt: trdt["label"]==0) # 1249 for rte
-    #     train_data_r=train_dataset.filter(lambda trdt: trdt["label"]!=0) # 1241 for rte
-    #     num_all=train_dataset.num_rows
-    #     num_0=train_data_0.num_rows
-    #     num_r=num_all-num_0
-    #     data0_num0=num_0*4//5 #data0 is what I select 80% into partition
-    #     data0_numr=num_all//2-data0_num0
-    #     data0_for0=train_data_0.select(range(0,data0_num0)) # 993 is 0.8 * 1241
-    #     data0_for1=train_data_0.select(range(data0_num0,num_0))
-    #     datar_for0=train_data_r.select(range(0,data0_numr))
-    #     datar_for1=train_data_r.select(range(data0_numr,num_r))
-    #     d1=datasets.concatenate_datasets([datar_for1, data0_for1])
-    #     d0=datasets.concatenate_datasets([datar_for0, data0_for0])
-    #     d1=d1.shuffle(seed=training_args.seed)
-    #     d0=d0.shuffle(seed=training_args.seed)
-    #     d0.to_json("split-train-set/"+data_args.task_name+"-all-0.json")
-    #     d1.to_json("split-train-set/"+data_args.task_name+"-all-1.json")
-    #     d0_1k=d0.select(range(1000))
-    #     d1_1k=d1.select(range(1000))
-    #     d0_1k.to_json("split-train-set/"+data_args.task_name+"-1k-0.json")
-    #     d1_1k.to_json("split-train-set/"+data_args.task_name+"-1k-1.json")
-    # train_dataset = raw_datasets["train"]
-    # train_dataset = train_dataset.select(range(1000))
-    # train_dataset.to_json("split-train-set/"+data_args.task_name+"-1k-ori.json")
-    # eval_dataset=raw_datasets["validation_matched"]
-    # eval_dataset.to_json("split-train-set/"+data_args.task_name+"-eval.json")
-    # exit(0)
-
     if training_args.do_train or training_args.do_fisher:
         if "train" not in raw_datasets:
             raise ValueError("--do_train and --do_fisher requires a train dataset")
@@ -585,7 +557,7 @@ def main():
     if training_args.do_eval:
         if "validation" not in raw_datasets and "validation_matched" not in raw_datasets:
             raise ValueError("--do_eval requires a validation dataset")
-        eval_dataset = raw_datasets["validation_matched" if data_args.task_name == "mnli" else "validation"]
+        eval_dataset = raw_datasets["validation" if data_args.task_name == "mnli" else "validation"]
         if data_args.max_eval_samples is not None:
             max_eval_samples = min(len(eval_dataset), data_args.max_eval_samples)
             eval_dataset = eval_dataset.select(range(max_eval_samples))
@@ -593,7 +565,7 @@ def main():
     if training_args.do_predict or data_args.task_name is not None or data_args.test_file is not None:
         if "test" not in raw_datasets and "test_matched" not in raw_datasets:
             raise ValueError("--do_predict requires a test dataset")
-        predict_dataset = raw_datasets["test_matched" if data_args.task_name == "mnli" else "test"]
+        predict_dataset = raw_datasets["test" if data_args.task_name == "mnli" else "test"]
         if data_args.max_predict_samples is not None:
             max_predict_samples = min(len(predict_dataset), data_args.max_predict_samples)
             predict_dataset = predict_dataset.select(range(max_predict_samples))
@@ -650,6 +622,7 @@ def main():
         compute_metrics=compute_metrics,
         tokenizer=tokenizer,
         data_collator=data_collator,
+        
     )
 
     # import pdb;pdb.set_trace()
@@ -756,22 +729,22 @@ def main():
                             item = label_list[item]
                             writer.write(f"{index}\t{item}\n")
 
-    kwargs = {"finetuned_from": model_args.model_name_or_path, "tasks": "text-classification"}
-    if data_args.task_name is not None:
-        kwargs["language"] = "en"
-        kwargs["dataset_tags"] = "glue"
-        kwargs["dataset_args"] = data_args.task_name
-        kwargs["dataset"] = f"GLUE {data_args.task_name.upper()}"
+    # kwargs = {"finetuned_from": model_args.model_name_or_path, "tasks": "text-classification"}
+    # if data_args.task_name is not None:
+    #     kwargs["language"] = "en"
+    #     kwargs["dataset_tags"] = "glue"
+    #     kwargs["dataset_args"] = data_args.task_name
+    #     kwargs["dataset"] = f"GLUE {data_args.task_name.upper()}"
 
-    if training_args.push_to_hub:
-        trainer.push_to_hub(**kwargs)
-    else:
-        trainer.create_model_card(**kwargs)
+    # if training_args.push_to_hub:
+    #     trainer.push_to_hub(**kwargs)
+    # else:
+    #     trainer.create_model_card(**kwargs)
 
 
-def _mp_fn(index):
-    # For xla_spawn (TPUs)
-    main()
+# def _mp_fn(index):
+#     # For xla_spawn (TPUs)
+#     main()
 
 
 if __name__ == "__main__":
