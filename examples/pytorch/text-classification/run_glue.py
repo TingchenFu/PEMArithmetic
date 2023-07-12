@@ -674,10 +674,11 @@ def main():
         # Loop to handle MNLI double evaluation (matched, mis-matched)
         tasks = [data_args.task_name]
         eval_datasets = [eval_dataset]
-        if data_args.task_name == "mnli":
-            tasks.append("mnli-mm")
-            eval_datasets.append(raw_datasets["validation_mismatched"])
-            combined = {}
+        # do not add the mismatch split
+        # if data_args.task_name == "mnli":
+        #     tasks.append("mnli-mm")
+        #     eval_datasets.append(raw_datasets["validation_mismatched"])
+        #     combined = {}
 
         for eval_dataset, task in zip(eval_datasets, tasks):
             metrics = trainer.evaluate(eval_dataset=eval_dataset)
@@ -707,9 +708,10 @@ def main():
         # Loop to handle MNLI double evaluation (matched, mis-matched)
         tasks = [data_args.task_name]
         predict_datasets = [predict_dataset]
-        if data_args.task_name == "mnli":
-            tasks.append("mnli-mm")
-            predict_datasets.append(raw_datasets["test_mismatched"])
+        # do not add the mismatch split
+        # if data_args.task_name == "mnli":
+        #     tasks.append("mnli-mm")
+        #     predict_datasets.append(raw_datasets["test_mismatched"])
 
         for predict_dataset, task in zip(predict_datasets, tasks):
             # Removing the `label` columns because it contains -1 and Trainer won't like that.
@@ -728,24 +730,6 @@ def main():
                         else:
                             item = label_list[item]
                             writer.write(f"{index}\t{item}\n")
-
-    # kwargs = {"finetuned_from": model_args.model_name_or_path, "tasks": "text-classification"}
-    # if data_args.task_name is not None:
-    #     kwargs["language"] = "en"
-    #     kwargs["dataset_tags"] = "glue"
-    #     kwargs["dataset_args"] = data_args.task_name
-    #     kwargs["dataset"] = f"GLUE {data_args.task_name.upper()}"
-
-    # if training_args.push_to_hub:
-    #     trainer.push_to_hub(**kwargs)
-    # else:
-    #     trainer.create_model_card(**kwargs)
-
-
-# def _mp_fn(index):
-#     # For xla_spawn (TPUs)
-#     main()
-
 
 if __name__ == "__main__":
     main()

@@ -9,9 +9,9 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --time=24:00:00
 
-export TRANSFORMERS_CACHE=checkpoints/hf_model
-export HF_DATASETS_CACHE=checkpoints/hf_model
-export HF_METRICS_CACHE=checkpoints/hf_model
+export TRANSFORMERS_CACHE=/apdcephfs/share_916081/shared_info/tingchenfu/huggingface_cache
+export HF_DATASETS_CACHE=/apdcephfs/share_916081/shared_info/tingchenfu/huggingface_cache
+export HF_METRICS_CACHE=/apdcephfs/share_916081/shared_info/tingchenfu/huggingface_cache
 
 cache_dir=${TRANSFORMERS_CACHE}
 
@@ -63,8 +63,8 @@ metric=accuracy
 # ######## mnli split #######
 task_names=("mnli" "mnli")
 pretrained_adapters=(
-    "checkpoints/glue/mnli/20230113/lora_try_train.13247707.1/glue/"
-    "checkpoints/glue/mnli/20230111/lora_try_train.13210242.1/glue/"
+    "/data/home/tingchenfu/PEMArithmetic/dump/glue/mnli/fft_train0.32.1e-5.4000.0.01/20230712"
+    "/data/home/tingchenfu/PEMArithmetic/dump/glue/mnli/fft_train0.32.1e-5.4000.0.01/20230712"
 )
 
 # pretrained_adapters=(
@@ -111,7 +111,7 @@ do
 
     adapter="${adapter}/${task_names[$x]}_${task_names[$y]}"
     task_name=${task_names[$y]}
-    SAVE=checkpoints/glue/${task_name}/${DATE}/${adapter}/eval
+    SAVE=checkpoints/glue/${task_name}/${adapter}/${DATE}/eval
 
     echo ${SAVE}
 

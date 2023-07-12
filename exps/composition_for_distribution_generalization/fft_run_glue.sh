@@ -50,7 +50,7 @@ export WANDB_ENTITY="adapter-merge"
 export WANDB_PROJECT=glue.${TASK_NAME}
 export WANDB_WATCH="all"
 # set to "wandb" to use weights & bias
-#$report_to="wandb"
+#report_to="wandb"
 report_to="none"
 
 DATE=`date +%Y%m%d`
@@ -75,14 +75,12 @@ DATE=`date +%Y%m%d`
 debug=0
 bsz=32
 gradient_steps=1
-# lr=1e-3
 max_grad_norm=1
 # lr=5e-5
 # weight_decay=0
 weight_decay=0.01
 warmup_updates=0
 warmup_ratio=0.06
-# max_steps=-1
 num_train_epochs=10
 max_tokens_per_batch=0
 max_seq_length=512
@@ -100,16 +98,15 @@ rm /apdcephfs/share_916081/shared_info/tingchenfu/huggingface_cache/downloads/*.
 rm /apdcephfs/share_916081/shared_info/tingchenfu/huggingface_cache/*.lock
 
 # SAVE=checkpoints/glue/${TASK_NAME}/${DATE}/${pretrained_adapter}/lora_1
-exp_name=fft_train0.${bsz}.${lr}.${max_steps}.${weight_decay} #initialization_30
+exp_name=fft_train1.${bsz}.${lr}.${max_steps}.${weight_decay} #initialization_30
 SAVE=/data/home/tingchenfu/PEMArithmetic/dump/glue/${TASK_NAME}/${exp_name}/${DATE}
-
-python -u examples/pytorch/text-classification/run_glue.py \
+mkdir -p $SAVE
+python3 -u examples/pytorch/text-classification/run_glue.py \
   --model_name_or_path roberta-base \
   --task_name ${TASK_NAME} \
-  --train_file  /apdcephfs/share_916081/shared_info/tingchenfu/PEMArithmetic/data/mnli-1k-0.json  \
+  --train_file  /apdcephfs/share_916081/shared_info/tingchenfu/PEMArithmetic/data/mnli-1k-1.json  \
   --validation_file  /apdcephfs/share_916081/shared_info/tingchenfu/PEMArithmetic/data/mnli-dev-matched.json  \
   --test_file /apdcephfs/share_916081/shared_info/tingchenfu/PEMArithmetic/data/mnli-test-matched.json  \
-  --label_names labels \
   --do_train \
   --do_eval   \
   --do_predict  \
@@ -129,7 +126,7 @@ python -u examples/pytorch/text-classification/run_glue.py \
   --warmup_steps ${warmup_updates} \
   --warmup_ratio ${warmup_ratio} \
   --logging_steps ${logging_steps} \
-  --save_total_limit 2 \
+  --save_total_limit 1 \
   --evaluation_strategy ${eval_strategy} \
   --save_strategy ${eval_strategy} \
   --save_steps ${save_steps} \

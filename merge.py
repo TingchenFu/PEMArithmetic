@@ -104,6 +104,7 @@ def adapter_merge(
         model_name_or_path=model_name_or_path[0]
         range_list=adapter_list
     # model-level
+    # the merging weight
     if coefficient_sets == None:
         coefficient_sets = len(range_list) * [ 1 / len(range_list)]
     else:

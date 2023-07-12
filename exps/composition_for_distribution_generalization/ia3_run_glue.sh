@@ -9,24 +9,24 @@
 #SBATCH --time=48:00:00
 #SBATCH --array=0-39%4
 
-trap_handler () {
-   echo "Caught signal: " $1
-   # SIGTERM must be bypassed
-   if [ "$1" = "TERM" ]; then
-       echo "bypass sigterm"
-   else
-     # Submit a new job to the queue
-     echo "Requeuing " $SLURM_ARRAY_JOB_ID $SLURM_ARRAY_TASK_ID
-     # SLURM_JOB_ID is a unique representation of the job, equivalent
-     # to above
-     scontrol requeue $SLURM_JOB_ID
-   fi
-}
+# trap_handler () {
+#    echo "Caught signal: " $1
+#    # SIGTERM must be bypassed
+#    if [ "$1" = "TERM" ]; then
+#        echo "bypass sigterm"
+#    else
+#      # Submit a new job to the queue
+#      echo "Requeuing " $SLURM_ARRAY_JOB_ID $SLURM_ARRAY_TASK_ID
+#      # SLURM_JOB_ID is a unique representation of the job, equivalent
+#      # to above
+#      scontrol requeue $SLURM_JOB_ID
+#    fi
+# }
 
 
-# Install signal handler
-trap 'trap_handler USR1' USR1
-trap 'trap_handler TERM' TERM
+# # Install signal handler
+# trap 'trap_handler USR1' USR1
+# trap 'trap_handler TERM' TERM
 
 export TRANSFORMERS_CACHE=checkpoints/hf_model
 export HF_DATASETS_CACHE=checkpoints/hf_model
